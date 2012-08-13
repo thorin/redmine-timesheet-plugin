@@ -1,6 +1,5 @@
 = Redmine Timesheet plugin
-
-A plugin to show and filter timelogs across all projects in Redmine.
+This is a fork of https://projects.littlestreamsoftware.com/projects/redmine-timesheet and this version is fixed for redmine 2.x release.
 
 == Features
 
@@ -26,7 +25,8 @@ A copy of the released version can be downloaded from {Little Stream Software}[h
 
 == Installation and Setup
 
-1. Follow the Redmine plugin installation steps at: http://www.redmine.org/wiki/redmine/Plugins Make sure the plugin is installed to +vendor/plugins/timesheet_plugin+
+1. Follow the Redmine plugin installation steps at: http://www.redmine.org/wiki/redmine/Plugins Make sure the plugin is installed to +plugins/timesheet+
+(git clone https://github.com/spilin/redmine-timesheet-plugin.git timesheet)
 2. Restart your Redmine web servers (e.g. mongrel, thin, mod_rails)
 3. Login and click the Timesheet Link in the top left menu
 
@@ -40,13 +40,15 @@ A copy of the released version can be downloaded from {Little Stream Software}[h
 
 === Git
 
-1. Open a shell to your Redmine's vendor/plugins/timesheet_plugin folder
+1. Open a shell to your Redmine's plugins/timesheet_plugin folder
 2. Update your Git copy with `git pull`
 3. Restart your Redmine
 
 == License
 
 This plugin is licensed under the GNU GPL v2.  See LICENSE.txt and GPL.txt for details.
+
+
 
 == Project help
 

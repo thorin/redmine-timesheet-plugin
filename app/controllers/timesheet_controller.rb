@@ -14,8 +14,6 @@ class TimesheetController < ApplicationController
 
   SessionKey = 'timesheet_filter'
 
-  verify :method => :delete, :only => :reset, :render => {:nothing => true, :status => :method_not_allowed }
-
   def index
     load_filters_from_session
     unless @timesheet
@@ -100,11 +98,11 @@ class TimesheetController < ApplicationController
 
   private
   def get_list_size
-    @list_size = Setting.plugin_timesheet_plugin['list_size'].to_i
+    @list_size = Setting.plugin_timesheet['list_size'].to_i
   end
 
   def get_precision
-    precision = Setting.plugin_timesheet_plugin['precision']
+    precision = Setting.plugin_timesheet['precision']
     
     if precision.blank?
       # Set precision to a high number
@@ -121,7 +119,7 @@ class TimesheetController < ApplicationController
   def allowed_projects
     if User.current.admin?
       Project.timesheet_order_by_name
-    elsif Setting.plugin_timesheet_plugin['project_status'] == 'all'
+    elsif Setting.plugin_timesheet['project_status'] == 'all'
       Project.timesheet_order_by_name.timesheet_with_membership(User.current)
     else
       Project.timesheet_order_by_name.all(:conditions => Project.visible_by(User.current))

@@ -18,17 +18,17 @@ module TimesheetPlugin
         # Wrapper for User#allowed_to? that doesn't reject archived projects
         # automatically
         def allowed_to_on_single_potentially_archived_project?(action, context, options={})
-          if Setting.plugin_timesheet_plugin['project_status'] == 'all' && context && context.is_a?(Project) && !context.active?
+          if Setting.plugin_timesheet['project_status'] == 'all' && context && context.is_a?(Project) && !context.active?
             # Duplicated from User#allowed_to? but without the archived project guard
             # No action allowed on disabled modules
             return false unless context.allows_to?(action)
             # Admin users are authorized for anything else
             return true if admin?
-      
+
             roles = roles_for_project_with_potentially_archived_project(context)
             return false unless roles
             roles.detect {|role| (context.is_public? || role.member?) && role.allowed_to?(action)}
-            
+
           else
             allowed_to?(action, context, options)
           end

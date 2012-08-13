@@ -153,7 +153,7 @@ class Timesheet
   end
 
   def self.viewable_users
-    if Setting['plugin_timesheet_plugin'].present? && Setting['plugin_timesheet_plugin']['user_status'] == 'all'
+    if Setting['plugin_timesheet'].present? && Setting['plugin_timesheet']['user_status'] == 'all'
       user_scope = User.all
     else
       user_scope = User.active

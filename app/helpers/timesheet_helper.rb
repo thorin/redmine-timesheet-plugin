@@ -34,7 +34,7 @@ module TimesheetHelper
     style ||= ''
 
     content_tag(:span,
-                link_to_function(image_tag(image, :plugin => "timesheet_plugin"), js),
+                link_to_function(image_tag(image, :plugin => "timesheet"), js),
                 :class => "toggle-" + issue_id.to_s,
                 :style => style
                 )
