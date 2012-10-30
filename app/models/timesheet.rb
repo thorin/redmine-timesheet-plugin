@@ -250,14 +250,14 @@ class Timesheet
   def fetch_time_entries_by_project
     self.projects.each do |project|
       logs = []
-      if User.current.allowed_to_on_single_potentially_archived_project?(:see_project_timesheets, project) or User.current.admin?
-
+      if User.current.admin? or 
+         User.current.allowed_to_on_single_potentially_archived_project?(:see_project_timesheets, project)
         # Administrators and Users with the Role and correct permission can see all time entries
         logs = project.time_entries.where(self.conditions(self.users)).
                        includes(self.includes).order(:spent_on)
       elsif User.current.allowed_to_on_single_potentially_archived_project? :view_time_entries, project
         # Users with permission to see their time entries
-        logs = project.time_entries.where(self.conditions(User.current.id)).
+        logs = project.time_entries.where(self.conditions(self.users & [User.current.id])).
                        includes([:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}]).order(:spent_on)
       else
         # Rest can see nothing
