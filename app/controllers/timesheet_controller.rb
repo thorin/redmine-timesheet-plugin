@@ -120,9 +120,11 @@ class TimesheetController < ApplicationController
     if User.current.admin?
       Project.timesheet_order_by_name
     elsif Setting.plugin_timesheet['project_status'] == 'all'
-      Project.timesheet_order_by_name.timesheet_with_membership(User.current)
+      # Project.timesheet_order_by_name.timesheet_with_membership(User.current)
+      Project.timesheet_with_membership(User.current).order(:name)
     else
-      Project.timesheet_order_by_name.all(:conditions => Project.visible_condition(User.current))
+      # Project.timesheet_order_by_name.all(:conditions => Project.visible_condition(User.current))
+      Project.visible.order(:name) # all, with archived
     end
   end
 

@@ -35,6 +35,7 @@ module TimesheetPlugin
             }
           end
         }
+
       end
 
       module ClassMethods

@@ -127,7 +127,7 @@ class Timesheet
   end
 
   def to_csv
-    returning '' do |out|
+    ''.tap do |out|
       FCSV.generate out do |csv|
         csv << csv_header
 
@@ -242,78 +242,32 @@ class Timesheet
   end
 
   private
-
-  
-  def time_entries_for_all_users(project)
-    return project.time_entries.find(:all,
-                                     :conditions => self.conditions(self.users),
-                                     :include => self.includes,
-                                     :order => "spent_on ASC")
-  end
-  
-  def time_entries_for_current_user(project)
-    return project.time_entries.find(:all,
-                                     :conditions => self.conditions(User.current.id),
-                                     :include => self.includes,
-                                     :include => [:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}],
-                                     :order => "spent_on ASC")
-  end
-  
-  def issue_time_entries_for_all_users(issue)
-    return issue.time_entries.find(:all,
-                                   :conditions => self.conditions(self.users),
-                                   :include => self.includes,
-                                   :include => [:activity, :user],
-                                   :order => "spent_on ASC")
-  end
-  
-  def issue_time_entries_for_current_user(issue)
-    return issue.time_entries.find(:all,
-                                   :conditions => self.conditions(User.current.id),
-                                   :include => self.includes,
-                                   :include => [:activity, :user],
-                                   :order => "spent_on ASC")
-  end
-  
   def time_entries_for_user(user, options={})
     extra_conditions = options.delete(:conditions)
-    
-    return TimeEntry.find(:all,
-                          :conditions => self.conditions([user], extra_conditions),
-                          :include => self.includes,
-                          :order => "spent_on ASC"
-                          )
+    TimeEntry.where(self.conditions([user], extra_conditions)).includes(self.includes).order(:spent_on)
   end
   
   def fetch_time_entries_by_project
     self.projects.each do |project|
       logs = []
-      users = []
-      if User.current.admin?
-        # Administrators can see all time entries
-        logs = time_entries_for_all_users(project)
-        users = logs.collect(&:user).uniq.sort
-      elsif User.current.allowed_to_on_single_potentially_archived_project?(:see_project_timesheets, project)
-        # Users with the Role and correct permission can see all time entries
-        logs = time_entries_for_all_users(project)
-        users = logs.collect(&:user).uniq.sort
-      elsif User.current.allowed_to_on_single_potentially_archived_project?(:view_time_entries, project)
+      if User.current.allowed_to_on_single_potentially_archived_project?(:see_project_timesheets, project) or User.current.admin?
+
+        # Administrators and Users with the Role and correct permission can see all time entries
+        logs = project.time_entries.where(self.conditions(self.users)).
+                       includes(self.includes).order(:spent_on)
+      elsif User.current.allowed_to_on_single_potentially_archived_project? :view_time_entries, project
         # Users with permission to see their time entries
-        logs = time_entries_for_current_user(project)
-        users = logs.collect(&:user).uniq.sort
+        logs = project.time_entries.where(self.conditions(User.current.id)).
+                       includes([:activity, :user, {:issue => [:tracker, :assigned_to, :priority]}]).order(:spent_on)
       else
         # Rest can see nothing
       end
+
+      users = logs.collect(&:user).uniq.sort
       
       # Append the parent project name
-      if project.parent.nil?
-        unless logs.empty?
-          self.time_entries[project.name] = { :logs => logs, :users => users } 
-        end
-      else
-        unless logs.empty?
-          self.time_entries[project.parent.name + ' / ' + project.name] = { :logs => logs, :users => users }
-        end
+      unless logs.empty?
+        self.time_entries[[project.parent, project].compact.map(&:name).join(' / '),] = { :logs => logs, :users => users }
       end
     end
   end
@@ -321,11 +275,8 @@ class Timesheet
   def fetch_time_entries_by_user
     self.users.each do |user_id|
       logs = []
-      if User.current.admin?
-        # Administrators can see all time entries
-        logs = time_entries_for_user(user_id)
-      elsif User.current.id == user_id
-        # Users can see their own their time entries
+      if User.current.id == user_id or User.current.admin?
+        # Users can see their own time entries and Administrators can see all time entries
         logs = time_entries_for_user(user_id)
       elsif User.current.allowed_to_on_single_potentially_archived_project?(:see_project_timesheets, nil, :global => true)
         # User can see project timesheets in at least once place, so
@@ -337,7 +288,7 @@ class Timesheet
       
       unless logs.empty?
         user = User.find_by_id(user_id)
-        self.time_entries[user.name] = { :logs => logs }  unless user.nil?
+        self.time_entries[user.name] = { :logs => logs } unless user.nil?
       end
     end
   end
@@ -350,18 +301,17 @@ class Timesheet
   #     
   def fetch_time_entries_by_issue
     self.projects.each do |project|
-      logs = []
+      logs  = []
       users = []
       project.issues.each do |issue|
-        if User.current.admin?
-          # Administrators can see all time entries
-          logs << issue_time_entries_for_all_users(issue)
-        elsif User.current.allowed_to_on_single_potentially_archived_project?(:see_project_timesheets, project)
-          # Users with the Role and correct permission can see all time entries
-          logs << issue_time_entries_for_all_users(issue)
+        if User.current.allowed_to_on_single_potentially_archived_project?(:see_project_timesheets, project) or User.current.admin?
+          # Users with the Role and correct permission and Administrators can see all time entries
+          logs << issue.time_entries.where(self.conditions(self.users)).
+                        includes([:activity, :user]).order(:spent_on)
         elsif User.current.allowed_to_on_single_potentially_archived_project?(:view_time_entries, project)
           # Users with permission to see their time entries
-          logs << issue_time_entries_for_current_user(issue)
+          logs << issue.time_entries.where(self.conditions(User.current.id)).
+                        includes([:activity, :user]).order(:spent_on)
         else
           # Rest can see nothing
         end
@@ -372,21 +322,17 @@ class Timesheet
       
       unless logs.empty?
         users << logs.collect(&:user).uniq.sort
-
         
         issues = logs.collect(&:issue).uniq
-        issue_logs = { }
+        issue_logs = {}
         issues.each do |issue|
-          issue_logs[issue] = logs.find_all {|time_log| time_log.issue == issue } # TimeEntry is for this issue
+          issue_logs[issue] = logs.select {|time_log| time_log.issue == issue } # TimeEntry is for this issue
         end
-        
-        # TODO: TE without an issue
-        
+
         self.time_entries[project] = { :issues => issue_logs, :users => users}
       end
     end
   end
-
 
   def l(*args)
     I18n.t(*args)
