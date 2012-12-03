@@ -33,12 +33,11 @@ end # form_tag
 -%>
 
 <% content_for(:header_tags) do %>
-<%= javascript_include_tag 'context_menu' %>
-<%= stylesheet_link_tag 'context_menu' %>
-<%= stylesheet_link_tag "timesheet.css", :plugin => "timesheet", :media => 'all' %>
-<%# TODO: Typo on hook %>
-<%= call_hook(:plugin_timesheet_view_timesheets_report_header_tags, { :timesheet => @timesheet }) %>
-<%= call_hook(:plugin_timesheet_views_timesheets_report_header_tags, { :timesheet => @timesheet }) %>
+  <%= javascript_include_tag 'timesheet', :plugin => 'timesheet' %>
+  <%= stylesheet_link_tag "timesheet.css", :plugin => "timesheet", :media => 'all' %>
+  <%# TODO: Typo on hook %>
+  <%= call_hook(:plugin_timesheet_view_timesheets_report_header_tags, { :timesheet => @timesheet }) %>
+  <%= call_hook(:plugin_timesheet_views_timesheets_report_header_tags, { :timesheet => @timesheet }) %>
 <% end %>
 
 <div id="context-menu" style="display: none;"></div>

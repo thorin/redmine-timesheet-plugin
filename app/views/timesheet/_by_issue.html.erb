@@ -1,7 +1,7 @@
 <table class="list issues">
   <thead>
     <th width="2%">
-      <%= link_to image_tag('toggle_check.png'), {}, :onclick => 'toggleIssuesSelection(this); return false;',
+      <%= link_to image_tag('toggle_check.png'), {}, :onclick => 'toggleIssuesSelection($(this).closest("table")); return false;',
                                                            :title => "#{l(:button_check_all)}/#{l(:button_uncheck_all)}", :class => 'toggle-all' %>
     </th>
     <th width="2%">&nbsp;</th>

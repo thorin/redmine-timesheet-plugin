@@ -2,7 +2,7 @@
 
 <%= render :partial => 'form' %>
 
-<% content_for(:header_tags) do %>
-<%= stylesheet_link_tag "timesheet.css", :plugin => "timesheet", :media => 'all' %>
-<%= javascript_include_tag 'timesheet.js', :plugin => 'timesheet' %>
+<% content_for :header_tags do %>
+  <%= javascript_include_tag 'timesheet', :plugin => 'timesheet' %>
+  <%= stylesheet_link_tag 'timesheet', :plugin => 'timesheet', :media => 'all' %>
 <% end %>

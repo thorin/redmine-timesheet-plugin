@@ -1,5 +1,5 @@
 function targetField(label_element) {
-  return  $(label_element.attributes.for.value);
+  return  $('#' + label_element.attributes.for.value).get(0);
 }
 
 function selectAllOptions(element) {
@@ -8,10 +8,8 @@ function selectAllOptions(element) {
   }
 }
 
-Event.observe(window, 'load',
-  function() { 
-    $$('label.select_all').each(function(element) {
-      Event.observe(element, 'click', function (e) { selectAllOptions(targetField(this)); });
+$(function() { 
+    $('label.select_all').each(function(element) {
+      $(this).click(function (e) { selectAllOptions(targetField(this)); });
     });
-  }
-);
+  });
